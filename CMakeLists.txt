@@ -1,28 +1,22 @@
-cmake_minimum_required(VERSION 3.2)
-project(SYCkLe)
+cmake_minimum_required(VERSION 3.20)
 
-set(APPLICATION_NAME "syckle")
+# Set compilers BEFORE project() call
 
-find_program(ICPX_COMPILER icpx)
+project(SYCkLe LANGUAGES CXX)
 
-if(NOT ICPX_COMPILER)
-    message(FATAL_ERROR "icpx compiler not found. Please install Intel oneAPI DPC++/C++ Compiler.")
-endif()
+# Find Intel SYCL package
+find_package(IntelSYCL REQUIRED)
 
-set(CMAKE_CXX_COMPILER ${ICPX_COMPILER})
+# Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Collect source files
 file(GLOB_RECURSE SRC_FILES src/*.cpp)
 
+# Create executable
+add_executable(syckle ${SRC_FILES})
 
-add_executable(${APPLICATION_NAME} ${SRC_FILES})
-
-target_compile_options(${APPLICATION_NAME} PRIVATE
-    -fsycl
-)
-
-target_link_options(${APPLICATION_NAME} PRIVATE
-    -fsycl
-)
+# Add SYCL support using Intel's modern CMake approach
+add_sycl_to_target(TARGET syckle SOURCES ${SRC_FILES})
 

@@ -27,6 +27,32 @@ int main() {
         std::cout << "Other\n";
         break;
       }
+
+      std::cout << "    Backend: ";
+      backend be = dev.get_backend();
+      switch (be) {
+      case backend::opencl:
+        std::cout << "OpenCL\n";
+        break;
+      case backend::ext_oneapi_cuda:
+        std::cout << "CUDA\n";
+        break;
+      case backend::ext_oneapi_level_zero:
+        std::cout << "Level Zero\n";
+        break;
+      case backend::ext_oneapi_native_cpu:
+        std::cout << "Native CPU\n";
+        break;
+      case backend::ext_oneapi_hip:
+        std::cout << "HIP\n";
+        break;
+      case backend::host:
+        std::cout << "Host (deprecated)\n";
+        break;
+      default:
+        std::cout << "Unknown\n";
+        break;
+      }
     }
   }
 
