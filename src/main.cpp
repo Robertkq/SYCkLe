@@ -13,7 +13,15 @@ int main(int argc, char **argv) {
   // Global options
   bool verbose = false;
 
+  std::string device;
+
   syckle.add_flag("-v,--verbose", verbose, "Enable verbose output");
+  syckle
+      .add_option(
+          "-d,--device", device,
+          "Specify SYCL device (e.g., 'auto', 'gpu', 'cpu', 'accelerator')")
+      ->check(CLI::IsMember({"auto", "gpu", "cpu", "accelerator"}))
+      ->default_str("gpu");
 
   if (!verbose) {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_ERROR);
@@ -23,7 +31,22 @@ int main(int argc, char **argv) {
   auto ls_cmd = syckle.add_subcommand(
       "ls", "List available SYCL devices and their capabilities");
 
-  // Subcommand 2: image blur
+  auto vector_cmd =
+      syckle.add_subcommand("vector", "Perform vector operations using SYCL");
+
+  std::string input_vector;
+  std::string output_vector = "output_vector.txt";
+
+  vector_cmd
+      ->add_option("-i,--input", input_vector, "First input vector file path")
+      ->required()
+      ->check(CLI::ExistingFile);
+
+  vector_cmd
+      ->add_option("-o,--output", output_vector,
+                   "Output vector file path (default: output_vector.txt)")
+      ->default_str("output_vector.txt");
+
   auto blur_cmd =
       syckle.add_subcommand("blur", "Apply GPU-accelerated blur to an image");
   std::string input_image;
@@ -35,9 +58,9 @@ int main(int argc, char **argv) {
       ->check(CLI::ExistingFile);
   blur_cmd->add_option("-o,--output", output_image, "Output image file path");
   blur_cmd->add_option("-r,--radius", blur_radius, "Blur radius (default: 2.0)")
-      ->check(CLI::Range(1, 20));
+      ->check(CLI::Range(1, 20))
+      ->default_val(2);
 
-  // Subcommand 3: neural network
   auto nn_cmd = syckle.add_subcommand("nn", "Run neural network inference");
   std::string model_path;
   std::string input_data;
@@ -73,17 +96,19 @@ int main(int argc, char **argv) {
     std::cout << "Executing SYCL device listing...\n";
 
     sycl_ls(std::cout);
+  } else if (*vector_cmd) {
+    std::cout << "Executing vector operations...\n";
+
+    vector_operation(input_vector, output_vector, device);
 
   } else if (*blur_cmd) {
-
     std::cout << std::format(
         "Applying blur with radius {} to image '{}' and saving to '{}'\n",
         blur_radius, input_image, output_image);
 
-    blur_image(input_image, output_image, blur_radius);
+    blur_image(input_image, output_image, blur_radius, device);
 
   } else if (*nn_cmd) {
-
     // TODO: Call your neural network implementation
     // run_neural_network(model_path, input_data, output_file, framework,
     // batch_size, device_type, verbose);
